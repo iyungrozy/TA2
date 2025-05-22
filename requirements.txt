@@ -3,7 +3,7 @@ opencv-python-headless==4.8.1.78
 torch==2.7.0
 torchvision==0.22.0
 ultralytics==8.1.0
-pillow==10.1.0
+pillow==9.5.0
 pandas==2.2.0
 numpy==1.26.4
 setuptools>=68.0.0
