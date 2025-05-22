@@ -6,4 +6,3 @@ ultralytics==8.1.0
 pillow==10.2.0
 pandas==2.2.0
 numpy==1.24.3
-streamlit-webrtc==0.47.0
