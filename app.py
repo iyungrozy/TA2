@@ -13,12 +13,21 @@ import threading
 import queue
 import logging
 import sys
+import asyncio
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Disable file watcher to resolve PyTorch compatibility issues
+# Disable file watcher and set environment variables to resolve PyTorch compatibility issues
 os.environ["STREAMLIT_WATCHDOG_MONITOR_OWN_CHANGES"] = "false"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512"
+torch.set_num_threads(4)  # Limit number of threads
+
+# Fix for asyncio event loop
+try:
+    asyncio.get_event_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
 # Page configuration
 st.set_page_config(
@@ -128,7 +137,10 @@ def load_model(model_path):
             
         # Load model with explicit task and device
         model = YOLO(model_path)
-        model.to('cuda' if torch.cuda.is_available() else 'cpu')
+        
+        # Move model to appropriate device
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        model.to(device)
         
         # Verify model loaded correctly
         if not hasattr(model, 'model'):
@@ -167,15 +179,33 @@ def get_detection_stats(results):
     return total_objects, helmet_count, no_helmet_count, bbox_data
 
 def process_image(model, image, confidence_threshold, nms_threshold):
-    start_time = time.time()
-    results = model(image, conf=confidence_threshold, iou=nms_threshold)
-    infer_time = time.time() - start_time
-    
-    total_objects, helmet_count, no_helmet_count, bbox_data = get_detection_stats(results)
-    
-    annotated_img = results[0].plot()
-    
-    return annotated_img, total_objects, helmet_count, no_helmet_count, bbox_data, infer_time
+    try:
+        start_time = time.time()
+        
+        # Convert image to numpy array if it's a PIL Image
+        if isinstance(image, Image.Image):
+            image = np.array(image)
+            
+        # Ensure image is in correct format
+        if len(image.shape) == 2:  # Grayscale
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        elif len(image.shape) == 3 and image.shape[2] == 4:  # RGBA
+            image = cv2.cvtColor(image, cv2.COLOR_RGBA2BGR)
+            
+        # Run inference
+        results = model(image, conf=confidence_threshold, iou=nms_threshold)
+        infer_time = time.time() - start_time
+        
+        # Get detection stats
+        total_objects, helmet_count, no_helmet_count, bbox_data = get_detection_stats(results)
+        
+        # Get annotated image
+        annotated_img = results[0].plot()
+        
+        return annotated_img, total_objects, helmet_count, no_helmet_count, bbox_data, infer_time
+    except Exception as e:
+        st.error(f"Error processing image: {str(e)}")
+        return None, 0, 0, 0, [], 0
 
 def process_video(model, video_path, confidence_threshold, nms_threshold, progress_bar=None):
     cap = cv2.VideoCapture(video_path)
