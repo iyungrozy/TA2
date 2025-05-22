@@ -365,6 +365,25 @@ def main():
             st.sidebar.error(f"Model file not found at: {model_path}")
             st.sidebar.info("Please ensure you have a valid YOLO model file (.pt or .pth) in the models directory")
             return
+
+    # Add confidence and NMS threshold settings
+    confidence_threshold = st.sidebar.slider(
+        "Confidence Threshold", 
+        min_value=0.1, 
+        max_value=1.0, 
+        value=0.5, 
+        step=0.05,
+        help="Minimum probability to filter weak detections"
+    )
+    
+    nms_threshold = st.sidebar.slider(
+        "NMS Threshold", 
+        min_value=0.1, 
+        max_value=1.0, 
+        value=0.4, 
+        step=0.05,
+        help="Non-maximum suppression threshold"
+    )
     
     # Load the model with better error handling
     model = load_model(model_path)
