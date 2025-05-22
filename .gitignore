@@ -1,0 +1,37 @@
+# Dataset and model files
+helmet_dataset/
+*.pt
+*.pth
+*.weights
+*.zip
+TA.zip
+
+# Training outputs
+runs/
+train.py
+training_output/
+*.zip
+training_output/*
+training_output/**/*
+!training_output/.gitkeep
+
+# Virtual Environment
+venv/
+env/
+.env/
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db 
