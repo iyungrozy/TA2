@@ -1,6 +1,7 @@
 # Dataset and model files
 helmet_dataset/
 *.pt
+!models/best.pt
 *.pth
 *.weights
 *.zip
